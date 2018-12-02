@@ -1,4 +1,6 @@
 defmodule Day2 do
+  # Part One
+
   def letter_counts(id) do
     counts =
       id
@@ -25,6 +27,51 @@ defmodule Day2 do
 
     sum2 * sum3
   end
+
+  # Part Two
+
+  def similarity(a, b) do
+    a = a |> String.split("", trim: true)
+    b = b |> String.split("", trim: true)
+    {_, diffs, common_rev} =
+      Enum.reduce_while(a, {b, 0, []}, fn c1, {b_rest, diffs, common_rev} ->
+        [c2 | b_rest] = b_rest
+        if c1 == c2 do
+          {:cont, {b_rest, diffs, [c1 | common_rev]}}
+        else
+          {(if diffs == 0, do: :cont, else: :halt), {b_rest, diffs + 1, common_rev}}
+        end
+      end)
+    if diffs == 1 do
+      common_rev |> Enum.reverse |> Enum.join("")
+    end
+  end
+
+  def find_common_letters(input) do
+    ids = parse(input)
+    Enum.reduce_while(ids, tl(ids), fn id, id_tail ->
+      sim = find_for_id(id, id_tail)
+      if sim do
+        {:halt, sim}
+      else
+        {:cont, tl(id_tail)}
+      end
+    end)
+  end
+
+  def find_for_id(id, other_ids) do
+    Enum.reduce_while(other_ids, nil, fn other_id, _ ->
+      sim = similarity(id, other_id)
+      if sim do
+        {:halt, sim}
+      else
+        {:cont, nil}
+      end
+    end)
+  end
+
+
+  # Utils
 
   def parse({:file, filename}) do
     {:ok, input} = File.read(filename)
